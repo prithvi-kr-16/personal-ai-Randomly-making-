@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>My Personal AI</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 700px;
+      margin: 30px auto;
+      background: #f4f4f4;
+      color: #222;
+    }
+
+    h2 {
+      text-align: center;
+    }
+
+    .tabs {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+    }
+
+    .tab-btn {
+      flex: 1;
+      padding: 10px;
+      border: none;
+      background: #ddd;
+      border-radius: 6px 6px 0 0;
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    .tab-btn.active {
+      background: #007bff;
+      color: white;
+    }
+
+    .panel {
+      display: none;
+      background: white;
+      border-radius: 0 8px 8px 8px;
+      padding: 16px;
+    }
+
+    .panel.active {
+      display: block;
+    }
+
+    #chatBox {
+      background: #fafafa;
+      border-radius: 8px;
+      padding: 12px;
+      height: 320px;
+      overflow-y: auto;
+      margin-bottom: 12px;
+      border: 1px solid #eee;
+    }
+
+    .msg {
+      margin: 8px 0;
+      padding: 8px 12px;
+      border-radius: 8px;
+      max-width: 80%;
+      white-space: pre-wrap;
+    }
+
+    .user {
+      background: #d1e7ff;
+      margin-left: auto;
+      text-align: right;
+    }
+
+    .ai {
+      background: #e6e6e6;
+    }
+
+    .row {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    input,
+    select,
+    textarea {
+      padding: 10px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      font-family: inherit;
+    }
+
+    input[type=text],
+    textarea {
+      flex: 1;
+    }
+
+    button {
+      padding: 10px 16px;
+      border: none;
+      background: #007bff;
+      color: white;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      opacity: 0.9;
+    }
+
+    .output {
+      margin-top: 10px;
+      padding: 12px;
+      background: #fafafa;
+      border-radius: 6px;
+      white-space: pre-wrap;
+      border: 1px solid #eee;
+      min-height: 20px;
+    }
+
+    label {
+      font-size: 13px;
+      color: #555;
+      display: block;
+      margin-bottom: 4px;
+    }
+  </style>
+</head>
+
+<body>
+  <h2>My Personal AI</h2>
+
+  <div class="tabs">
+    <button class="tab-btn active" onclick="showTab('chat')">Chat</button>
+    <button class="tab-btn" onclick="showTab('office')">Office</button>
+    <button class="tab-btn" onclick="showTab('research')">Research</button>
+    <button class="tab-btn" onclick="showTab('freelance')">Freelance</button>
+    <button class="tab-btn" onclick="showTab('dropship')">Dropship</button>
+  </div>
+
+  <!-- CHAT PANEL -->
+  <div id="chat" class="panel active">
+    <div id="chatBox"></div>
+    <div class="row">
+      <input type="text" id="userInput" placeholder="Type an instruction..." />
+      <button onclick="sendMessage()">Send</button>
+    </div>
+  </div>
+
+  <!-- OFFICE PANEL -->
+  <div id="office" class="panel">
+    <label>What should the file contain?</label>
+    <div class="row">
+      <input type="text" id="officeInstruction"
+        placeholder="e.g. make a 5 slide pitch deck for a dropshipping business" />
+      <select id="officeType">
+        <option value="word">Word</option>
+        <option value="excel">Excel</option>
+        <option value="ppt">PPT</option>
+      </select>
+      <button onclick="generateOfficeFile()">Generate</button>
+    </div>
+    <div id="officeResult" class="output"></div>
+  </div>
+
+  <!-- RESEARCH PANEL -->
+  <div id="research" class="panel">
+    <label>Topic to learn / research</label>
+    <div class="row">
+      <input type="text" id="researchTopic" placeholder="e.g. latest trends in AI dropshipping 2026" />
+      <button onclick="learnTopic()">Learn</button>
+    </div>
+    <div id="researchResult" class="output"></div>
+  </div>
+
+  <!-- FREELANCE PANEL -->
+  <div id="freelance" class="panel">
+    <label>What do you need?</label>
+    <div class="row">
+      <select id="freelanceType">
+        <option value="proposal">Proposal</option>
+        <option value="invoice">Invoice</option>
+        <option value="email">Client Email</option>
+      </select>
+    </div>
+    <textarea id="freelanceInput" rows="3" style="width:100%; margin-bottom:10px;"
+      placeholder="Describe the situation (client brief / invoice items / email context)"></textarea>
+    <button onclick="runFreelance()">Generate</button>
+    <div id="freelanceResult" class="output"></div>
+  </div>
+
+  <!-- DROPSHIP PANEL -->
+  <div id="dropship" class="panel">
+    <label>Product research by niche</label>
+    <div class="row">
+      <input type="text" id="dropshipNiche" placeholder="e.g. home fitness accessories" />
+      <button onclick="getDropshipIdeas()">Find Ideas</button>
+    </div>
+    <label>Or generate a listing for a specific product</label>
+    <div class="row">
+      <input type="text" id="dropshipProduct" placeholder="e.g. resistance bands set" />
+      <button onclick="getDropshipListing()">Generate Listing</button>
+    </div>
+    <div id="dropshipResult" class="output"></div>
+  </div>
+
+  <script>
+    function showTab(name) {
+      document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.getElementById(name).classList.add('active');
+      event.target.classList.add('active');
+    }
+
+    // ---------- CHAT ----------
+    const chatBox = document.getElementById('chatBox');
+    const userInput = document.getElementById('userInput');
+
+    function addMessage(text, sender) {
+      const div = document.createElement('div');
+      div.className = 'msg ' + sender;
+      div.textContent = text;
+      chatBox.appendChild(div);
+      chatBox.scrollTop = chatBox.scrollHeight;
+    }
+
+    async function sendMessage() {
+      const message = userInput.value.trim();
+      if (!message) return;
+      addMessage(message, 'user');
+      userInput.value = '';
+      try {
+        const res = await fetch('/api/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message })
+        });
+        const data = await res.json();
+        addMessage(data.reply || data.error, 'ai');
+      } catch (err) {
+        addMessage('Error: could not reach server', 'ai');
+      }
+    }
+    userInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') sendMessage(); });
+
+    // ---------- OFFICE ----------
+    async function generateOfficeFile() {
+      const instruction = document.getElementById('officeInstruction').value.trim();
+      const type = document.getElementById('officeType').value;
+      const resultDiv = document.getElementById('officeResult');
+      if (!instruction) return;
+      resultDiv.textContent = 'Generating...';
+      try {
+        const res = await fetch('/api/office/' + type, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ instruction })
+        });
+        const data = await res.json();
+        resultDiv.innerHTML = data.file
+          ? `<a href="${data.file}" target="_blank">Download generated file</a>`
+          : 'Error: ' + (data.error || 'unknown');
+      } catch (err) {
+        resultDiv.textContent = 'Error: could not reach server';
+      }
+    }
+
+    // ---------- RESEARCH ----------
+    async function learnTopic() {
+      const topic = document.getElementById('researchTopic').value.trim();
+      const resultDiv = document.getElementById('researchResult');
+      if (!topic) return;
+      resultDiv.textContent = 'Researching...';
+      try {
+        const res = await fetch('/api/research/learn', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ topic })
+        });
+        const data = await res.json();
+        resultDiv.textContent = data.summary || data.error;
+      } catch (err) {
+        resultDiv.textContent = 'Error: could not reach server';
+      }
+    }
+
+    // ---------- FREELANCE ----------
+    async function runFreelance() {
+      const type = document.getElementById('freelanceType').value;
+      const input = document.getElementById('freelanceInput').value.trim();
+      const resultDiv = document.getElementById('freelanceResult');
+      if (!input) return;
+      resultDiv.textContent = 'Generating...';
+
+      let body, endpoint;
+      if (type === 'proposal') {
+        endpoint = '/api/freelance/proposal';
+        body = { clientBrief: input };
+      } else if (type === 'invoice') {
+        endpoint = '/api/freelance/invoice';
+        // Simple format expected: "Client Name | item1:amount, item2:amount"
+        const [clientName, itemsPart] = input.split('|').map(s => s.trim());
+        const items = (itemsPart || '').split(',').map(pair => {
+          const [description, amount] = pair.split(':').map(s => s.trim());
+          return { description, amount: Number(amount) };
+        });
+        body = { clientName, items, currency: 'INR' };
+      } else {
+        endpoint = '/api/freelance/email';
+        body = { context: input };
+      }
+
+      try {
+        const res = await fetch(endpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body)
+        });
+        const data = await res.json();
+        resultDiv.textContent = data.proposal || data.invoice || data.email || data.error;
+      } catch (err) {
+        resultDiv.textContent = 'Error: could not reach server';
+      }
+    }
+
+    // ---------- DROPSHIP ----------
+    async function getDropshipIdeas() {
+      const niche = document.getElementById('dropshipNiche').value.trim();
+      const resultDiv = document.getElementById('dropshipResult');
+      if (!niche) return;
+      resultDiv.textContent = 'Researching trending products...';
+      try {
+        const res = await fetch('/api/dropship/ideas', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ niche })
+        });
+        const data = await res.json();
+        resultDiv.textContent = data.ideas || data.error;
+      } catch (err) {
+        resultDiv.textContent = 'Error: could not reach server';
+      }
+    }
+
+    async function getDropshipListing() {
+      const productName = document.getElementById('dropshipProduct').value.trim();
+      const resultDiv = document.getElementById('dropshipResult');
+      if (!productName) return;
+      resultDiv.textContent = 'Writing listing...';
+      try {
+        const res = await fetch('/api/dropship/listing', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ productName, features: [] })
+        });
+        const data = await res.json();
+        resultDiv.textContent = data.listing || data.error;
+      } catch (err) {
+        resultDiv.textContent = 'Error: could not reach server';
+      }
+    }
+  </script>
+</body>
+
+</html>
